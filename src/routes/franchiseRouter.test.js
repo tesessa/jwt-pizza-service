@@ -19,14 +19,14 @@ beforeAll(async () => {
 test('create store', async() => {
     // const getStores = await request(app).get(`/api/franchise/${userID}`).set('Authorization', `Bearer ${adminAuthToken}`);
     // console.log(getStores.body)
-    const getFranchises = await request(app).get('/api/franchise')
-    let franchise_id = getFranchises.body[0].id
+    //const getFranchises = await request(app).get('/api/franchise')
+    // let franchise_id = createMockFranchise();
+    // const getFranchises = await request(app).get('/api/franchise')
     // console.log(getFranchises.body)
-    const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name:"Orem"});
+    const createStoreRes = await request(app).post(`/api/franchise/${1620}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: 1620, name:"Orem"});
     // console.log(createStoreRes.body)
     expect(createStoreRes.status).toBe(200);
-    //console.log(createStoreRes.body.id);
-    expect(createStoreRes.body.franchiseId).toEqual(franchise_id)
+    expect(createStoreRes.body.franchiseId).toEqual(1620)
     expect(createStoreRes.body.name).toEqual("Orem")
 });
 
