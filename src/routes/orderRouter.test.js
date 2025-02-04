@@ -24,7 +24,7 @@ test('get menu', async() => {
 test('add menu item valid', async() => {
     ///api/order/menu
     let menu = createMenuItem();
-    const addMenuRes = await request(app).get('/api/order/menu').set('Authorization',  `Bearer ${adminAuthToken}`).send(menu);
+    const addMenuRes = await request(app).put('/api/order/menu').set('Authorization',  `Bearer ${adminAuthToken}`).send(menu);
     //expect(addMenuRes.body).not.toHaveLength(0);
     expect(addMenuRes.status).toEqual(200);
 });
@@ -50,7 +50,13 @@ test('get order for user', async() => {
 test('create order', async() => {
     let franchise_id = await createMockFranchise();
     let store_id = await createMockStore(franchise_id);
-    let order = {franchiseId: franchise_id, storeId: store_id, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
+    let menu = createMenuItem();
+    console.log(menu);
+    const addMenuRes = await request(app).put('/api/order/menu').set('Authorization',  `Bearer ${adminAuthToken}`).send(menu);
+    expect(addMenuRes.status).toEqual(200); 
+    console.log(addMenuRes.body);
+    menu.id = addMenuRes.body.find(item => item.title === menu.title).id;
+    let order = {franchiseId: franchise_id, storeId: store_id, items:[{...menu, menuId: menu.id}]};
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     expect(createOrderRes.status).toEqual(200);
     expectValidJwt(createOrderRes.body.jwt);
@@ -66,7 +72,7 @@ test('create bad order', async() => {
 
 
 function createMenuItem() {
-    let menu = {title: randomName(), description: "No topping, no sauce, just carbs", image:"pizza9.png", price: 0.0001 };
+    let menu = {title: randomName(), description: "New item", image:"pizza9.png", price: 0.0001 };
     return menu;
 }
 
@@ -103,6 +109,6 @@ async function createMockFranchise() {
 }
 
 async function createMockStore(franchise_id) {
-    const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name:"Random"});
+    const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name: randomName()});
     return createStoreRes.body.id; 
 }
