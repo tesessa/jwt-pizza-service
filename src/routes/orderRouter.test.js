@@ -48,7 +48,9 @@ test('get order for user', async() => {
 });
 
 test('create order', async() => {
-    let order = {franchiseId: 1, storeId:1, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
+    let franchise_id = await createMockFranchise();
+    let store_id = await createMockStore(franchise_id);
+    let order = {franchiseId: franchise_id, storeId: store_id, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     expect(createOrderRes.status).toEqual(200);
     expectValidJwt(createOrderRes.body.jwt);
@@ -93,6 +95,12 @@ function createUser() {
     return user; 
   }
 
+async function createMockFranchise() {
+    let n = randomName();
+    const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminAuthToken}`).send({name: n, admins: [{email: `${adminUser.email}`}]});
+   // console.log(createFranchiseRes.body);
+    return createFranchiseRes.body.id;
+}
 
 async function createMockStore(franchise_id) {
     const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name:"Random"});

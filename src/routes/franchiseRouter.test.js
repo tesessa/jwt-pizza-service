@@ -20,14 +20,15 @@ test('create store', async() => {
     // const getStores = await request(app).get(`/api/franchise/${userID}`).set('Authorization', `Bearer ${adminAuthToken}`);
     // console.log(getStores.body)
     //const getFranchises = await request(app).get('/api/franchise')
-    // let franchise_id = createMockFranchise();
-    // const getFranchises = await request(app).get('/api/franchise')
-    // console.log(getFranchises.body)
-    const createStoreRes = await request(app).post(`/api/franchise/${1620}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: 1620, name:"Orem"});
+    let franchise_id = await createMockFranchise();
+    // const getFranchises = await request(app).get('/api/franchise');
+    // console.log(getFranchises.body);
+    let store_name = randomName();
+    const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name: store_name});
     // console.log(createStoreRes.body)
     expect(createStoreRes.status).toBe(200);
-    expect(createStoreRes.body.franchiseId).toEqual(1620)
-    expect(createStoreRes.body.name).toEqual("Orem")
+    expect(createStoreRes.body.franchiseId).toEqual(franchise_id);
+    expect(createStoreRes.body.name).toEqual(store_name);
 });
 
 test('create store no admin', async() => {

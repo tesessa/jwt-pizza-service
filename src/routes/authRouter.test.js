@@ -68,9 +68,9 @@ test('update user admin', async() => {
 });
 
 test('udate user not admin', async() => {
-  const loginRes = await request(app).put('/api/auth').send(testUser);
+  //const loginRes = await request(app).put('/api/auth').send(testUser);
   // console.log(loginRes.body.user.id);
-  const updateRes =  await request(app).put(`/api/auth/${2}`).set('Authorization', `Bearer ${loginRes.body.token}`).send({email: testUser.email, password: testUser.password});
+  const updateRes =  await request(app).put(`/api/auth/${2}`).set('Authorization', `Bearer ${testUserAuthToken}`).send({email: testUser.email, password: testUser.password});
   expect(updateRes.body.message).toEqual("unauthorized");
   //expect(updateRes.status).toBe(403);
 });
