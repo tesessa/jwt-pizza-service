@@ -3,7 +3,6 @@ const app = require('../service');
 
 let adminUser;
 let adminAuthToken;
-let userID;
 
 beforeAll(async () => {
     if (process.env.VSCODE_INSPECTOR_OPTIONS) {
@@ -11,7 +10,6 @@ beforeAll(async () => {
     }
     adminUser = await createAdminUser();
     const loginRes = await request(app).put('/api/auth').send(adminUser);
-    userID = loginRes.body.user.id
     adminAuthToken = loginRes.body.token;
     expectValidJwt(adminAuthToken);
 });
@@ -25,14 +23,14 @@ test('get menu', async() => {
 
 test('add menu item valid', async() => {
     ///api/order/menu
-    menu = createMenuItem();
+    let menu = createMenuItem();
     const addMenuRes = await request(app).get('/api/order/menu').set('Authorization',  `Bearer ${adminAuthToken}`).send(menu);
     expect(addMenuRes.body).not.toHaveLength(0);
     expect(addMenuRes.status).toEqual(200);
 });
 
 test('add menu item no admin', async() => {
-    menu = createMenuItem();
+    let menu = createMenuItem();
     const user = createUser();
     const regRes = await request(app).post('/api/auth').send(user);
     const addMenuRes = await request(app).put('/api/order/menu').set('Authorization',  `Bearer ${regRes.body.token}`).send(menu);
@@ -42,31 +40,31 @@ test('add menu item no admin', async() => {
 
 test('get order for user', async() => {
     ///api/order
-    order = {franchiseId: 1, storeId:1, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
-    const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
+    let order = {franchiseId: 1, storeId:1, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
+    await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     const getOrderRes = await request(app).get('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`);
     expect(getOrderRes.body.orders).not.toHaveLength(0);
 
 });
 
 test('create order', async() => {
-    order = {franchiseId: 1, storeId:1, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
+    let order = {franchiseId: 1, storeId:1, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]};
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     expect(createOrderRes.status).toEqual(200);
     expectValidJwt(createOrderRes.body.jwt);
 });
 
 test('create bad order', async() => {
-    franchise_id = createMockFranchise();
-    store_id = createMockStore(franchise_id);
-    order = {franchiseId: franchise_id, storeId: store_id, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]}; 
+    let franchise_id = createMockFranchise();
+    let store_id = createMockStore(franchise_id);
+    let order = {franchiseId: franchise_id, storeId: store_id, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]}; 
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     expect(createOrderRes.status).toEqual(500);
 });
 
 
 function createMenuItem() {
-    menu = {title: randomName(), description: "No topping, no sauce, just carbs", image:"pizza9.png", price: 0.0001 };
+    let menu = {title: randomName(), description: "No topping, no sauce, just carbs", image:"pizza9.png", price: 0.0001 };
     return menu;
 }
 
@@ -97,7 +95,7 @@ function createUser() {
   }
 
 async function createMockFranchise() {
-    n = randomName();
+    let n = randomName();
     const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminAuthToken}`).send({name: n, admins: [{email: `${adminUser.email}`}]});
    // console.log(createFranchiseRes.body);
     return createFranchiseRes.body.id;

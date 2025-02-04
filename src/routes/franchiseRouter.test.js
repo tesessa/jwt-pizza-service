@@ -54,7 +54,7 @@ test('create franchise', async() => {
 });
 
 test('create franchise no admin', async() => {
-    auth = await createUser();
+    let auth = await createUser();
     const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${auth}`).send({name: "no_admin", admins: [{email: `${adminUser.email}`}]});
     expect(createFranchiseRes.status).toBe(403);
 });
@@ -66,7 +66,7 @@ test('delete franchise', async() => {
 });
 
 test('delete franchise no admin', async() => {
-    auth = await createUser();
+    let auth = await createUser();
     let franchise_id = await createMockFranchise();
     const deleteFranchiseRes = await request(app).delete(`/api/franchise/${franchise_id}`).set('Authorization', `Bearer ${auth}`);
     //console.log(deleteFranchiseRes);
@@ -83,6 +83,7 @@ test('delete store', async() => {
 });
 
 test('delete store not an admin', async() => {
+    let auth = await createUser();
     let franchise_id = await createMockFranchise();
     let store_id = await createMockStore(franchise_id);
     const deleteStoreRes = await request(app).delete(`/api/franchise/${franchise_id}/store/${store_id}`).set('Authorization', `Bearer ${auth}`); 
@@ -124,7 +125,7 @@ async function createUser() {
 }
 
 async function createMockFranchise() {
-    n = randomName();
+    let n = randomName();
     const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminAuthToken}`).send({name: n, admins: [{email: `${adminUser.email}`}]});
    // console.log(createFranchiseRes.body);
     return createFranchiseRes.body.id;
