@@ -93,11 +93,6 @@ function createUser() {
     return user; 
   }
 
-async function createMockFranchise() {
-    let n = randomName();
-    const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminAuthToken}`).send({name: n, admins: [{email: `${adminUser.email}`}]});
-    return createFranchiseRes.body.id;
-}
 
 async function createMockStore(franchise_id) {
     const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name:"Random"});
