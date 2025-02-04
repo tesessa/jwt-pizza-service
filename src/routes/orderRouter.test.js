@@ -55,8 +55,8 @@ test('create order', async() => {
 });
 
 test('create bad order', async() => {
-    let franchise_id = createMockFranchise();
-    let store_id = createMockStore(franchise_id);
+    let franchise_id = 2000000;
+    let store_id = await createMockStore(franchise_id);
     let order = {franchiseId: franchise_id, storeId: store_id, items:[{ menuId: 1, description: "Veggie", price: 0.05 }]}; 
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);
     expect(createOrderRes.status).toEqual(500);
@@ -84,7 +84,6 @@ async function createAdminUser() {
   user.email = user.name + '@admin.com';
 
   user = await DB.addUser(user);
-  //console.log(user);
   return { ...user, password: 'toomanysecrets' };
 }
 
@@ -97,7 +96,6 @@ function createUser() {
 async function createMockFranchise() {
     let n = randomName();
     const createFranchiseRes = await request(app).post('/api/franchise').set('Authorization', `Bearer ${adminAuthToken}`).send({name: n, admins: [{email: `${adminUser.email}`}]});
-   // console.log(createFranchiseRes.body);
     return createFranchiseRes.body.id;
 }
 

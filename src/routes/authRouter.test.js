@@ -55,13 +55,13 @@ test('logout valid', async () => {
 test('update user admin', async() => {
   let adminUser;
   adminUser = await createAdminUser();
-  console.log(adminUser);
+  // console.log(adminUser);
   const loginRes = await request(app).put('/api/auth').send(adminUser);
   let adminAuthToken = loginRes.body.token;
-  console.log(adminAuthToken);
+  // console.log(adminAuthToken);
   const updateRes =  await request(app).put(`/api/auth/${loginRes.body.user.id}`).set('Authorization', `Bearer ${adminAuthToken}`).send({email: adminUser.email, password: adminUser.password});
-  console.log(loginRes.body.user);
-  console.log(updateRes.body);
+  // console.log(loginRes.body.user);
+  // console.log(updateRes.body);
   expect(updateRes.body).toEqual(loginRes.body.user);
 
 
