@@ -4,6 +4,12 @@ const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 
+const metrics = require('../metrics.js');
+const app = express();
+
+//app.use(metrics.requestTracker);
+app.use(express.json());
+
 const orderRouter = express.Router();
 
 orderRouter.endpoints = [
@@ -44,7 +50,14 @@ orderRouter.endpoints = [
 orderRouter.get(
   '/menu',
   asyncHandler(async (req, res) => {
+    //console.log("MENU");
+    metrics.incrementRequest("GET");
+    const start = new Date();
+    //Logger.httpLogger(req,res);
     res.send(await DB.getMenu());
+    const end = new Date();
+    latency = end - start;
+    metrics.addGeneralLatency(latency);
   })
 );
 
@@ -53,13 +66,22 @@ orderRouter.put(
   '/menu',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    // console.log("ADD MENU");
+    metrics.incrementRequest("PUT");
+    const start = new Date();
+    //Logger.httpLogger(req,res);
     if (!req.user.isRole(Role.Admin)) {
+      metrics.trackAuthAttempts(false);
       throw new StatusCodeError('unable to add menu item', 403);
     }
 
     const addMenuItemReq = req.body;
     await DB.addMenuItem(addMenuItemReq);
     res.send(await DB.getMenu());
+    const end = new Date();
+    latency = end - start;
+    metrics.addGeneralLatency(latency);
+    metrics.trackAuthAttempts(true);
   })
 );
 
@@ -68,17 +90,32 @@ orderRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    // console.log("GET USER ORDERS");
+    metrics.incrementRequest("GET");
+    const start = new Date();
+    //Logger.httpLogger(req,res);
     res.json(await DB.getOrders(req.user, req.query.page));
+    const end = new Date();
+    latency = end - start;
+    metrics.addGeneralLatency(latency);
+    metrics.trackAuthAttempts(true);
   })
 );
 
 // createOrder
+//'{"franchiseId": 1, "storeId":1, "items":[{ "menuId": 1, "description": "Veggie", "price": 0.05 }]}'
 orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    console.log("ORDER");
+    metrics.incrementRequest("POST");
+    const start = new Date();
+    //Logger.httpLogger(req,res);
     const orderReq = req.body;
+    console.log(req.body.items);
     const order = await DB.addDinerOrder(req.user, orderReq);
+    console.log(order);
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
@@ -86,8 +123,30 @@ orderRouter.post(
     });
     const j = await r.json();
     if (r.ok) {
+      console.log("YAY");
+      const end = new Date();
+      latency = end - start;
+      console.log(req.body.items);
+      let revenue = 0;
+      req.body.items.forEach(item => {
+        revenue += item.price;
+      });
+     // const revenue = req.body.items[0].price;
+      const pizzasSold = req.body.items.length;
+      
+      console.log("pizzasSold ", pizzasSold);
+      console.log("revenue ", revenue);
+      metrics.addGeneralLatency(latency);
+      metrics.trackAuthAttempts(true);
+      metrics.addRevenue(revenue);
+      metrics.pizzasSold(pizzasSold);
+      metrics.addPizzaCreationLatency(latency);
+
       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
     } else {
+      //console.log("uh oh");
+      metrics.trackAuthAttempts(false);
+      metrics.pizzaCreationFailures(true);
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
     }
   })

@@ -4,6 +4,12 @@ const config = require('../config.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
 
+const metrics = require('../metrics.js');
+const app = express();
+
+//app.use(metrics.requestTracker());
+app.use(express.json());
+
 const authRouter = express.Router();
 
 authRouter.endpoints = [
@@ -67,12 +73,24 @@ authRouter.authenticateToken = (req, res, next) => {
 authRouter.post(
   '/',
   asyncHandler(async (req, res) => {
+    metrics.incrementRequest("POST");
+    const start = new Date();
+    //Logger.httpLogger(req, res);
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
+      metrics.trackAuthAttempts(false);
       return res.status(400).json({ message: 'name, email, and password are required' });
     }
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
     const auth = await setAuth(user);
+
+    const end = new Date()
+
+    const latency = end - start
+    metrics.addGeneralLatency(latency)
+
+    metrics.trackAuthAttempts(true)
+    metrics.addActiveUser(user.id)
     res.json({ user: user, token: auth });
   })
 );
@@ -81,9 +99,30 @@ authRouter.post(
 authRouter.put(
   '/',
   asyncHandler(async (req, res) => {
+    metrics.incrementRequest("PUT");
+    const start = new Date();
+    //Logger.httpLogger(req,res);
     const { email, password } = req.body;
+    if (!email || !password) {
+      metrics.trackAuthAttempts(false);
+      return res.status(400).json({ message: 'email and password are required' });
+    }
+   //try {
     const user = await DB.getUser(email, password);
+    // } catch(error) {
+    //   console.log("AUTH");
+    //   metrics.trackAuthAttempts(false);
+    // }
     const auth = await setAuth(user);
+
+    const end = new Date();
+
+    const latency = end - start;
+    metrics.addGeneralLatency(latency);
+
+    metrics.trackAuthAttempts(true);
+    metrics.addActiveUser(user.id);
+
     res.json({ user: user, token: auth });
   })
 );
@@ -93,7 +132,21 @@ authRouter.delete(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    metrics.incrementRequest("DELETE");
+    const start = new Date();
+    //Logger.httpLogger(req, res);
     await clearAuth(req);
+
+    const user = req.user;
+
+    if (user && user.id) {
+      metrics.removeActiveUser(user.id);
+    }
+    const end = new Date();
+    const latency = end - start;
+    metrics.addGeneralLatency(latency);
+    metrics.trackAuthAttempts(true);
+
     res.json({ message: 'logout successful' });
   })
 );
@@ -103,14 +156,24 @@ authRouter.put(
   '/:userId',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    metrics.incrementRequest("PUT");
+    const start = new Date();
+    //Logger.httpLogger(req, res);
     const { email, password } = req.body;
     const userId = Number(req.params.userId);
     const user = req.user;
     if (user.id !== userId && !user.isRole(Role.Admin)) {
+      metrics.trackAuthAttempts(false);
       return res.status(403).json({ message: 'unauthorized' });
     }
 
     const updatedUser = await DB.updateUser(userId, email, password);
+
+    const end = new Date();
+    const latency = end - start;
+    metrics.addGeneralLatency(latency);
+    metrics.setAuthAttempts(true);
+    
     res.json(updatedUser);
   })
 );
