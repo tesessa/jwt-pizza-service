@@ -70,7 +70,7 @@ franchiseRouter.get(
     //Logger.httpLogger(req, res);
     res.json(await DB.getFranchises(req.user));
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
 
   })
@@ -93,7 +93,7 @@ franchiseRouter.get(
       metrics.trackAuthAttempts(false);
     }
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
     res.json(result);
@@ -116,7 +116,7 @@ franchiseRouter.post(
     const franchise = req.body;
 
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
     res.send(await DB.createFranchise(franchise));
@@ -140,7 +140,7 @@ franchiseRouter.delete(
     const franchiseId = Number(req.params.franchiseId);
     await DB.deleteFranchise(franchiseId);
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
     res.json({ message: 'franchise deleted' });
@@ -163,7 +163,7 @@ franchiseRouter.post(
     }
 
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
     res.send(await DB.createStore(franchise.id, req.body));
@@ -189,7 +189,7 @@ franchiseRouter.delete(
     await DB.deleteStore(franchiseId, storeId);
 
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
     res.json({ message: 'store deleted' });

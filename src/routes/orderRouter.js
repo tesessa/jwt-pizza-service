@@ -56,7 +56,7 @@ orderRouter.get(
     //Logger.httpLogger(req,res);
     res.send(await DB.getMenu());
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
   })
 );
@@ -79,7 +79,7 @@ orderRouter.put(
     await DB.addMenuItem(addMenuItemReq);
     res.send(await DB.getMenu());
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
   })
@@ -96,7 +96,7 @@ orderRouter.get(
     //Logger.httpLogger(req,res);
     res.json(await DB.getOrders(req.user, req.query.page));
     const end = new Date();
-    latency = end - start;
+    const latency = end - start;
     metrics.addGeneralLatency(latency);
     metrics.trackAuthAttempts(true);
   })
@@ -125,7 +125,7 @@ orderRouter.post(
     if (r.ok) {
       console.log("YAY");
       const end = new Date();
-      latency = end - start;
+      const latency = end - start;
       console.log(req.body.items);
       let revenue = 0;
       req.body.items.forEach(item => {

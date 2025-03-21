@@ -90,7 +90,7 @@ authRouter.post(
     metrics.addGeneralLatency(latency)
 
     metrics.trackAuthAttempts(true)
-    metrics.addActiveUser(user.id)
+    metrics.addActiveUser()
     res.json({ user: user, token: auth });
   })
 );
@@ -121,7 +121,7 @@ authRouter.put(
     metrics.addGeneralLatency(latency);
 
     metrics.trackAuthAttempts(true);
-    metrics.addActiveUser(user.id);
+    metrics.addActiveUser();
 
     res.json({ user: user, token: auth });
   })
@@ -137,11 +137,7 @@ authRouter.delete(
     //Logger.httpLogger(req, res);
     await clearAuth(req);
 
-    const user = req.user;
-
-    if (user && user.id) {
-      metrics.removeActiveUser(user.id);
-    }
+    metrics.removeActiveUser();
     const end = new Date();
     const latency = end - start;
     metrics.addGeneralLatency(latency);

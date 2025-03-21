@@ -36,49 +36,25 @@ function incrementRequest(requestType) {
   }
 }
 
-// function incrementRequest(requestType) {
-//   if (requestType == "POST") {
-//     post++;
-//     sendMetricToGrafana('postRequests', post, 'sum', '1');
-//   } else if (requestType == "PUT") {
-//     put++;
-//     sendMetricToGrafana('putRequests', put, 'sum', '1');
-//   } else if (requestType == "GET") {
-//     get++;
-//     sendMetricToGrafana('getRequests', get, 'sum', '1');
-//   } else if (requestType == "DELETE") {
-//     deleteReq++;
-//     sendMetricToGrafana('deleteRequests', deleteReq, 'sum', '1'); 
-//   }
-//   // sendMetricToGrafana('postRequests', post, 'sum', '1');
-//   //sendMetricToGrafana('putRequests', put, 'sum', '1');
-//   // sendMetricToGrafana('getRequests', get, 'sum', '1');
-//   // sendMetricToGrafana('deleteRequests', deleteReq, 'sum', '1');
-// } 
+
 function trackAuthAttempts(authAttempt) {
   if (authAttempt == true) {
     authTrue++;
   } else if (authAttempt == false) {
     authFalse++;
   }
-  // sendMetricToGrafana('authWorked', authTrue, 'sum', '1');
-  // sendMetricToGrafana('authFailed', authFalse, 'sum', '1');
 }
 
 function addGeneralLatency(latency_input) {
   latency = latency_input;
-  //console.log("latency ", latency);
-  //sendMetricToGrafana('latency', latency, 'histogram', 'ms');
 }
 
-function addActiveUser(userId) {
+function addActiveUser() {
   activeUsers++;
-  // sendMetricToGrafana('activeUsers', activeUsers, 'sum', '1');
 }
 
-function removeActiveUser(userId) {
+function removeActiveUser() {
   activeUsers--;
-  // sendMetricToGrafana('activeUsers', activeUsers, 'sum', '1');
 }
 
 function addRevenue(revenue_input) {
