@@ -102,19 +102,6 @@ function requestTracker(req, res, next) {
     next();
 }
 
-// function track(endpoint) {
-//     return (req, res, next) => {
-//       requests[endpoint] = (requests[endpoint] || 0) + 1;
-//       next();
-//     };
-//   }
-  
-  // This will periodically send metrics to Grafana
-  // const timer = setInterval(() => {
-  //   Object.keys(requests).forEach((endpoint) => {
-  //     sendMetricToGrafana('requests', requests[endpoint], { endpoint });
-  //   });
-  // }, 10000);
 
 
 const os = require('os');
@@ -133,15 +120,13 @@ function getMemoryUsagePercentage() {
 }
 
 function sendMetricsPeriodically(period) {
-    const timer = setInterval(() => {
+    setInterval(() => {
       try {
-        // const buf = new MetricBuilder();
         Object.keys(requestCounts).forEach((requestType) => {
           sendMetricToGrafana(`${requestType.toLowerCase()}Requests`, requestCounts[requestType], 'sum', '1');
         });
 
         sendMetricToGrafana('totalRequests', requests, 'sum', '1');
-        //console.log("latency2 ", latency);
         sendMetricToGrafana('latency', latency, 'sum', 'ms');
         sendMetricToGrafana('cpuUsage', getCpuUsagePercentage(), 'gauge', '%');
         sendMetricToGrafana('memoryUsage', getMemoryUsagePercentage(), 'gauge', '%');
@@ -152,14 +137,7 @@ function sendMetricsPeriodically(period) {
         sendMetricToGrafana('revenue', revenue, 'sum', '1');
         sendMetricToGrafana('pizzaCreationLatency', pizzaCreationLatency, 'sum', 'ms');
         sendMetricToGrafana('pizzaCreationFailures', pizzaFailures, 'sum', '1');
-        // httpMetrics(buf);
-        // systemMetrics(buf);
-        // userMetrics(buf);
-        // purchaseMetrics(buf);
-        // authMetrics(buf);
-  
-        // const metrics = buf.toString('\n');
-        // this.sendMetricToGrafana(metrics);
+    
       } catch (error) {
         console.log('Error sending metrics', error);
       }
@@ -204,16 +182,7 @@ function sendMetricToGrafana(metricName, metricValue, type, unit) {
     ],
   };
 
-  // Object.keys(attributes).forEach((key) => {
-  //   metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push({
-  //     key: key,
-  //     value: { stringValue: attributes[key] },
-  //   });
-  // });
-  // if (type === 'sum') {
-  //   metric.resourceMetrics[0].scopeMetrics[0].metrics[0][type].aggregationTemporality = 'AGGREGATION_TEMPORALITY_CUMULATIVE';
-  //   metric.resourceMetrics[0].scopeMetrics[0].metrics[0][type].isMonotonic = true;
-  // }
+
 
   const body = JSON.stringify(metric);
 
