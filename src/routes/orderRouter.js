@@ -108,14 +108,14 @@ orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    console.log("ORDER");
+    //console.log("ORDER");
     metrics.incrementRequest("POST");
     const start = new Date();
     //Logger.httpLogger(req,res);
     const orderReq = req.body;
-    console.log(req.body.items);
+    //console.log(req.body.items);
     const order = await DB.addDinerOrder(req.user, orderReq);
-    console.log(order);
+    //console.log(order);
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
@@ -123,10 +123,10 @@ orderRouter.post(
     });
     const j = await r.json();
     if (r.ok) {
-      console.log("YAY");
+      //console.log("YAY");
       const end = new Date();
       const latency = end - start;
-      console.log(req.body.items);
+      //console.log(req.body.items);
       let revenue = 0;
       req.body.items.forEach(item => {
         revenue += item.price;
@@ -134,8 +134,8 @@ orderRouter.post(
      // const revenue = req.body.items[0].price;
       const pizzasSold = req.body.items.length;
       
-      console.log("pizzasSold ", pizzasSold);
-      console.log("revenue ", revenue);
+      // console.log("pizzasSold ", pizzasSold);
+      // console.log("revenue ", revenue);
       metrics.addGeneralLatency(latency);
       metrics.trackAuthAttempts(true);
       metrics.addRevenue(revenue);

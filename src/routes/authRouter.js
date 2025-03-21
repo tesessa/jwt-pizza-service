@@ -168,7 +168,7 @@ authRouter.put(
     const end = new Date();
     const latency = end - start;
     metrics.addGeneralLatency(latency);
-    metrics.setAuthAttempts(true);
+    metrics.trackAuthAttempts(true);
     
     res.json(updatedUser);
   })

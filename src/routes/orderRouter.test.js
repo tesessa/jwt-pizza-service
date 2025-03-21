@@ -51,10 +51,10 @@ test('create order', async() => {
     let franchise_id = await createMockFranchise();
     let store_id = await createMockStore(franchise_id);
     let menu = createMenuItem();
-    console.log(menu);
+    //console.log(menu);
     const addMenuRes = await request(app).put('/api/order/menu').set('Authorization',  `Bearer ${adminAuthToken}`).send(menu);
     expect(addMenuRes.status).toEqual(200); 
-    console.log(addMenuRes.body);
+    //console.log(addMenuRes.body);
     menu.id = addMenuRes.body.find(item => item.title === menu.title).id;
     let order = {franchiseId: franchise_id, storeId: store_id, items:[{...menu, menuId: menu.id}]};
     const createOrderRes = await request(app).post('/api/order').set('Authorization',  `Bearer ${adminAuthToken}`).send(order);

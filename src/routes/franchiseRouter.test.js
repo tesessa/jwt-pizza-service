@@ -25,7 +25,7 @@ test('create store', async() => {
     // console.log(getFranchises.body);
     let store_name = randomName();
     const createStoreRes = await request(app).post(`/api/franchise/${franchise_id}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchise_id, name: store_name});
-    console.log(createStoreRes.body)
+   // console.log(createStoreRes.body)
 
     expect(createStoreRes.status).toBe(200);
     expect(createStoreRes.body.franchiseId).toEqual(franchise_id);
