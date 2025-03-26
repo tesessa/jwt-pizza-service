@@ -1,15 +1,19 @@
 const express = require('express');
 const { DB, Role } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
+const config = require('../config.js');
 const { StatusCodeError, asyncHandler } = require('../endpointHelper.js');
-
+const logger2 = require('../logger.js');
 const metrics = require('../metrics.js');
 const app = express();
-
+const Logger = require('pizza-logger');
+const logger = new Logger(config);
 //app.use(metrics.requestTracker);
 app.use(express.json());
+app.use(logger.httpLogger); 
 
 const franchiseRouter = express.Router();
+franchiseRouter.use(logger.httpLogger);
 
 franchiseRouter.endpoints = [
   {
@@ -90,6 +94,7 @@ franchiseRouter.get(
     if (req.user.id === userId || req.user.isRole(Role.Admin)) {
       result = await DB.getUserFranchises(userId);
     } else {
+      logger.unhandledErrorLogger(new StatusCodeError("Not authorized", 403));
       metrics.trackAuthAttempts(false);
     }
     const end = new Date();

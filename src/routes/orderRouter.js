@@ -3,14 +3,18 @@ const config = require('../config.js');
 const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
-
+const logger2 = require('../logger.js');
+const Logger = require('pizza-logger');
+const logger = new Logger(config);
 const metrics = require('../metrics.js');
 const app = express();
 
 //app.use(metrics.requestTracker);
 app.use(express.json());
+app.use(logger.httpLogger); 
 
 const orderRouter = express.Router();
+orderRouter.use(logger.httpLogger)
 
 orderRouter.endpoints = [
   {
@@ -94,6 +98,9 @@ orderRouter.get(
     metrics.incrementRequest("GET");
     const start = new Date();
     //Logger.httpLogger(req,res);
+    if (!req.user) {
+      throw new StatusCodeError("User needed to get user orders", 403);
+    }
     res.json(await DB.getOrders(req.user, req.query.page));
     const end = new Date();
     const latency = end - start;
@@ -108,10 +115,8 @@ orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    //console.log("ORDER");
     metrics.incrementRequest("POST");
     const start = new Date();
-    //Logger.httpLogger(req,res);
     const orderReq = req.body;
     //console.log(req.body.items);
     const order = await DB.addDinerOrder(req.user, orderReq);
@@ -123,10 +128,8 @@ orderRouter.post(
     });
     const j = await r.json();
     if (r.ok) {
-      //console.log("YAY");
       const end = new Date();
       const latency = end - start;
-      //console.log(req.body.items);
       let revenue = 0;
       req.body.items.forEach(item => {
         revenue += item.price;
@@ -134,19 +137,18 @@ orderRouter.post(
      // const revenue = req.body.items[0].price;
       const pizzasSold = req.body.items.length;
       
-      // console.log("pizzasSold ", pizzasSold);
-      // console.log("revenue ", revenue);
       metrics.addGeneralLatency(latency);
       metrics.trackAuthAttempts(true);
       metrics.addRevenue(revenue);
       metrics.pizzasSold(pizzasSold);
       metrics.addPizzaCreationLatency(latency);
-
+      logger.factoryLogger(r.body);
       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
     } else {
       //console.log("uh oh");
       metrics.trackAuthAttempts(false);
       metrics.pizzaCreationFailures(true);
+      logger.unhandledErrorLogger(new StatusCodeError('Failed to fulfill order at factory', 500));
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
     }
   })
