@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
-const logger2 = require('../logger.js');
 const Logger = require('pizza-logger');
 const logger = new Logger(config);
 
