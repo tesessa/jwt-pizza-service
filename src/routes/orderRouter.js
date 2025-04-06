@@ -49,7 +49,7 @@ orderRouter.endpoints = [
     response: { order: { franchiseId: 1, storeId: 1, items: [{ menuId: 1, description: 'Veggie', price: 0.05 }], id: 1 }, jwt: '1111111111' },
   },
 ];
-
+//eyJpYXQiOjE3NDM0NDI5MTYsImV4cCI6MTc0MzUyOTMxNiwiaXNzIjoiY3MzMjkuY2xpY2siLCJhbGciOiJSUzI1NiIsImtpZCI6IjE0bk5YT21jaWt6emlWZWNIcWE1UmMzOENPM1BVSmJuT2MzazJJdEtDZlEifQ.eyJ2ZW5kb3IiOnsiaWQiOiJ0ZXNzYTM0MyIsIm5hbWUiOiJUZXNzYSBBbmRlcnNlbiJ9LCJkaW5lciI6eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20ifSwib3JkZXIiOnsiaXRlbXMiOlt7Im1lbnVJZCI6MSwiZGVzY3JpcHRpb24iOiJWZWdnaWUiLCJwcmljZSI6MC4wMDM4fV0sInN0b3JlSWQiOiIxIiwiZnJhbmNoaXNlSWQiOjEsImlkIjoxMTN9fQ.PE73BFuovm6fQ_B1pb9xaTcjfOOQV_it8Q5_JEFesGdaNSoVjykwrKrODQJgeNC6aoi8VroFWlIQmlzNABVe9uZ6lm3pZdKbcGQInW_AGFaktk6HTPRkMW5DqcfoksK3A5EWJtwqf-9itgVFqL-MuLelZLJ2Iog2-6KKcNSPWOa_zSuiqMBaDCnGR_eS5UndkD2AvqRKQXxXSpttIyybgK0ICHyBX06C4HOxoQIOCpB13qYZZCEWVxL0G2FG-yLVtmU6awrj1mrDs9sJPCG9KxNh2j2lRF5TlBuuFQMfP-OiwfnT3-a8OLGh7eopMFZtAylnDZ3xQNPEDUJp-_Ma7KSiWfSb3YG3qkd0yhvKAAjva6XdyYXI6kdpxRFEZBlS2M6m-E275dHQWp9_FWZnbvR0FimobsHxgbFM_BUveDZU9AvY05kl30aT_16vP7NZIYnmVWrCcUzjF5SZUGE9nrqGHDNGm7gxgff94Fp9ZtYthmYParid4N0kxXthteJ7kpzGXTHcLgGMVqWCfzqK2gYnMn_FgVjG5FyV-KK6G_jCuw3H7tH0oPEdl7Tkr-Ia_w4s2bBGnR8JMjAJ61l_GRCp_6tqwK1t-gfzmk6R5C6vkQVgbm6lIxVUiAGqBt3CAGNoDV8WEuATaEzMFjGSpHEAsrDjBUQM5PdViZpveBw
 // getMenu
 orderRouter.get(
   '/menu',
@@ -109,12 +109,26 @@ orderRouter.get(
   })
 );
 
+orderRouter.post('/', (req, res, next) => {
+  if (enableChaos && Math.random() < 0.5) {
+    const pizzasFailed = req.body.items.length;
+    metrics.pizzaCreationFailures(pizzasFailed);
+    throw new StatusCodeError('Chaos monkey', 500);
+  }
+  next();
+});
 // createOrder
 //'{"franchiseId": 1, "storeId":1, "items":[{ "menuId": 1, "description": "Veggie", "price": 0.05 }]}'
 orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    // if (enableChaos && Math.random() < 0.5) {
+    //   metrics.pizzaCreationFailures(true);
+    //   console.log("HERE");
+    //   throw new StatusCodeError('Chaos monkey', 500);
+    // }
+    // next();
     metrics.incrementRequest("POST");
     const start = new Date();
     const orderReq = req.body;
@@ -147,11 +161,34 @@ orderRouter.post(
     } else {
       //console.log("uh oh");
       metrics.trackAuthAttempts(false);
-      metrics.pizzaCreationFailures(true);
+      const pizzasFailed = req.body.items.length;
+      metrics.pizzaCreationFailures(pizzasFailed);
       logger.unhandledErrorLogger(new StatusCodeError('Failed to fulfill order at factory', 500));
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
     }
   })
 );
+
+
+let enableChaos = false;
+orderRouter.put(
+  '/chaos/:state',
+  authRouter.authenticateToken,
+  asyncHandler(async (req, res) => {
+    if (req.user.isRole(Role.Admin)) {
+      enableChaos = req.params.state === 'true';
+    }
+
+    res.json({ chaos: enableChaos });
+  })
+);
+
+// orderRouter.post('/', (req, res, next) => {
+//   if (enableChaos && Math.random() < 0.5) {
+//     metrics.pizzaCreationFailures(true);
+//     throw new StatusCodeError('Chaos monkey', 500);
+//   }
+//   next();
+// });
 
 module.exports = orderRouter;

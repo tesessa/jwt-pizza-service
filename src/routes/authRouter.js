@@ -109,6 +109,7 @@ authRouter.put(
   asyncHandler(async (req, res) => {
     metrics.incrementRequest("PUT");
     const start = new Date();
+    console.log("HERE AT LOGIN");
     //Logger.httpLogger(req,res);
     const { email, password } = req.body;
     if (!email || !password) {

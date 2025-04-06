@@ -127,7 +127,7 @@ function sendMetricsPeriodically(period) {
         });
 
         sendMetricToGrafana('totalRequests', requests, 'sum', '1');
-        sendMetricToGrafana('latency', latency, 'sum', 'ms');
+        sendMetricToGrafana('latency', latency/requests, 'sum', 'ms');
         sendMetricToGrafana('cpuUsage', getCpuUsagePercentage(), 'gauge', '%');
         sendMetricToGrafana('memoryUsage', getMemoryUsagePercentage(), 'gauge', '%');
         sendMetricToGrafana('authWorked', authTrue, 'sum', '1');
@@ -166,7 +166,11 @@ function sendMetricToGrafana(metricName, metricValue, type, unit) {
                      // attributes: [config.metrics.source],
                       attributes: [
                         {
-                          source: config.metrics.source
+                          key: "source",
+                          value: {
+                            stringValue: config.metrics.source
+                          }
+                          //source: config.metrics.source
                         }
                      ]
                     },
