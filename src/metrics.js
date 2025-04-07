@@ -46,7 +46,7 @@ function trackAuthAttempts(authAttempt) {
 }
 
 function addGeneralLatency(latency_input) {
-  latency = latency_input;
+  latency += latency_input;
 }
 
 function addActiveUser() {
@@ -67,7 +67,7 @@ function pizzasSold(pizzas_input) {
 }
 
 function addPizzaCreationLatency(pizzaLatency) {
-  pizzaCreationLatency = pizzaLatency;
+  pizzaCreationLatency += pizzaLatency;
 }
 
 function pizzaCreationFailures(failures) {
@@ -135,7 +135,7 @@ function sendMetricsPeriodically(period) {
         sendMetricToGrafana('activeUsers', activeUsers, 'sum', '1');
         sendMetricToGrafana('pizzasSold', pizzas, 'sum', '1');
         sendMetricToGrafana('revenue', revenue, 'sum', '1');
-        sendMetricToGrafana('pizzaCreationLatency', pizzaCreationLatency, 'sum', 'ms');
+        sendMetricToGrafana('pizzaCreationLatency', pizzaCreationLatency/pizzas, 'sum', 'ms');
         sendMetricToGrafana('pizzaCreationFailures', pizzaFailures, 'sum', '1');
     
       } catch (error) {
