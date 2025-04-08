@@ -163,7 +163,7 @@ orderRouter.post(
       metrics.trackAuthAttempts(false);
       const pizzasFailed = req.body.items.length;
       metrics.pizzaCreationFailures(pizzasFailed);
-      logger.unhandledErrorLogger(new StatusCodeError('Failed to fulfill order at factory', 500));
+      logger.unhandledErrorLogger(new StatusCodeError(`Failed to fulfill order at factory ${config.factory.url}`, 500));
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
     }
   })
