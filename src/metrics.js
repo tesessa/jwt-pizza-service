@@ -71,7 +71,7 @@ function addPizzaCreationLatency(pizzaLatency) {
 }
 
 function pizzaCreationFailures(failures) {
-  pizzaFailures += failures;
+  pizzaFailures = failures;
 }
 
 function requestTracker(req, res, next) {
