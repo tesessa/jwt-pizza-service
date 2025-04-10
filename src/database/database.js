@@ -11,6 +11,15 @@ const logger = new Logger(config);
 class DB {
   constructor() {
     this.initialized = this.initializeDatabase();
+    this.pool = mysql.createPool({
+      host: config.db.connection.host,
+      user: config.db.connection.user,
+      password: config.db.connection.password,
+      database: config.db.connection.database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
   }
 
   async getMenu() {
@@ -19,7 +28,8 @@ class DB {
       const rows = await this.query(connection, `SELECT * FROM menu`);
       return rows;
     } finally {
-      connection.end();
+     // connection.end();
+     connection.release();
     }
   }
 
@@ -29,7 +39,8 @@ class DB {
       const addResult = await this.query(connection, `INSERT INTO menu (title, description, image, price) VALUES (?, ?, ?, ?)`, [item.title, item.description, item.image, item.price]);
       return { ...item, id: addResult.insertId };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -55,7 +66,8 @@ class DB {
       }
       return { ...user, id: userId, password: undefined };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -76,7 +88,8 @@ class DB {
 
       return { ...user, roles: roles, password: undefined };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -92,12 +105,13 @@ class DB {
         params.push(`email='${email}'`);
       }
       if (params.length > 0) {
-        const query = `UPDATE user SET ${params.join(', ')} WHERE id=${userId}`;
-        await this.query(connection, query);
+        const query = `UPDATE user SET ${params.join(', ')} WHERE id=?`;
+        await this.query(connection, query, [userId]);
       }
       return this.getUser(email, password);
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -107,7 +121,8 @@ class DB {
     try {
       await this.query(connection, `INSERT INTO auth (token, userId) VALUES (?, ?)`, [token, userId]);
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -118,7 +133,8 @@ class DB {
       const authResult = await this.query(connection, `SELECT userId FROM auth WHERE token=?`, [token]);
       return authResult.length > 0;
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -128,7 +144,8 @@ class DB {
     try {
       await this.query(connection, `DELETE FROM auth WHERE token=?`, [token]);
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -143,7 +160,8 @@ class DB {
       }
       return { dinerId: user.id, orders: orders, page };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -158,7 +176,8 @@ class DB {
       }
       return { ...order, id: orderId };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -183,7 +202,8 @@ class DB {
 
       return franchise;
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -201,7 +221,8 @@ class DB {
         throw new StatusCodeError('unable to delete franchise', 500);
       }
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -218,7 +239,8 @@ class DB {
       }
       return franchises;
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -231,13 +253,16 @@ class DB {
       }
 
       franchiseIds = franchiseIds.map((v) => v.objectId);
-      const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
+      const query = `SELECT id, name FROM franchise WHERE id IN (${placeholders})`;
+      const franchises = await this.query(connection, query, franchiseIds);
+      //const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
       for (const franchise of franchises) {
         await this.getFranchise(franchise);
       }
       return franchises;
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -254,7 +279,8 @@ class DB {
 
       return franchise;
     } finally {
-      connection.end();
+     // connection.end();
+     connection.release();
     }
   }
 
@@ -264,7 +290,8 @@ class DB {
       const insertResult = await this.query(connection, `INSERT INTO store (franchiseId, name) VALUES (?, ?)`, [franchiseId, store.name]);
       return { id: insertResult.insertId, franchiseId, name: store.name };
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -273,7 +300,8 @@ class DB {
     try {
       await this.query(connection, `DELETE FROM store WHERE franchiseId=? AND id=?`, [franchiseId, storeId]);
     } finally {
-      connection.end();
+      //connection.end();
+      connection.release();
     }
   }
 
@@ -311,22 +339,30 @@ class DB {
   }
 
   async _getConnection(setUse = true) {
-    const connection = await mysql.createConnection({
-      host: config.db.connection.host,
-      user: config.db.connection.user,
-      password: config.db.connection.password,
-      connectTimeout: config.db.connection.connectTimeout,
-      decimalNumbers: true,
-    });
-    if (setUse) {
-      await connection.query(`USE ${config.db.connection.database}`);
-    }
-    return connection;
+    return await this.pool.getConnection();
+    // const connection = await mysql.createConnection({
+    //   host: config.db.connection.host,
+    //   user: config.db.connection.user,
+    //   password: config.db.connection.password,
+    //   connectTimeout: config.db.connection.connectTimeout,
+    //   decimalNumbers: true,
+    // });
+    // if (setUse) {
+    //   await connection.query(`USE ${config.db.connection.database}`);
+    // }
+    // return connection;
   }
 
   async initializeDatabase() {
     try {
-      const connection = await this._getConnection(false);
+      const connection = await mysql.createConnection({
+        host: config.db.connection.host,
+        user: config.db.connection.user,
+        password: config.db.connection.password,
+        connectTimeout: config.db.connection.connectTimeout,
+        decimalNumbers: true,
+      });
+      //await this._getConnection(false);
       try {
         const dbExists = await this.checkDatabaseExists(connection);
         console.log(dbExists ? 'Database exists' : 'Database does not exist, creating it');
@@ -347,7 +383,7 @@ class DB {
           this.addUser(defaultAdmin);
         }
       } finally {
-        connection.end();
+        await connection.end();
       }
     } catch (err) {
       console.error(JSON.stringify({ message: 'Error initializing database', exception: err.message, connection: config.db.connection }));
