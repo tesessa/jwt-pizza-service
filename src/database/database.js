@@ -253,8 +253,8 @@ class DB {
       }
 
       franchiseIds = franchiseIds.map((v) => v.objectId);
-      const query = `SELECT id, name FROM franchise WHERE id IN (${placeholders})`;
-      const franchises = await this.query(connection, query, franchiseIds);
+      //const query = `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`;
+      const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
       //const franchises = await this.query(connection, `SELECT id, name FROM franchise WHERE id in (${franchiseIds.join(',')})`);
       for (const franchise of franchises) {
         await this.getFranchise(franchise);
