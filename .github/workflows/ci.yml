@@ -113,6 +113,13 @@ jobs:
         uses: PortSwigger/dastardly-github-action@main
         with:
           target-url: 'https://pizza.tesessa.click'
+          burp-report-file-path: '${{ github.workspace }}/burp-scan-report.html'
+          
+      - name: Upload Burp Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: burp-scan-report
+          path: '${{ github.workspace }}/burp-scan-report.html'
 
   deploy:
     runs-on: ubuntu-latest
